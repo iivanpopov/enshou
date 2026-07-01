@@ -1,9 +1,11 @@
-import type { ErrorHandler as HonoErrorHandler } from 'hono/types'
+import type { ErrorHandler } from 'hono/types'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 
 import { HTTPException } from 'hono/http-exception'
 
-export interface ErrorHandler {
+export type HonoErrorHandler = ErrorHandler
+
+export interface EnshouErrorHandler {
   handle: HonoErrorHandler
 }
 

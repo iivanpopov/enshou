@@ -1,10 +1,10 @@
 import type { Provider } from '@enshou/di'
 import type { ErrorHandler as HonoErrorHandler, MiddlewareHandler } from 'hono'
 
-import { Container } from '@enshou/di'
+import { Container, createToken } from '@enshou/di'
 import { Hono } from 'hono'
 
-import type { ErrorHandler } from './exceptions'
+import type { EnshouErrorHandler } from './exceptions'
 import type { MiddlewareDefinition } from './middleware'
 import type { Class } from './utils'
 
@@ -16,35 +16,29 @@ export interface ApplicationOptions {
   controllers?: Class<any>[]
   providers?: Provider<unknown>[]
   middlewares?: MiddlewareDefinition[]
-  errorHandler?: Class<ErrorHandler> | HonoErrorHandler
+  errorHandler?: Class<EnshouErrorHandler> | HonoErrorHandler
 }
 
 export class Application {
   public readonly container: Container = new Container()
+  public basePath: string
+  public controllers: Class<any>[]
+  public providers: Provider<unknown>[]
+  public middlewares: MiddlewareDefinition[]
+  public errorHandler?: Class<EnshouErrorHandler> | HonoErrorHandler
 
-  constructor(private readonly options: ApplicationOptions) {}
-
-  get controllers(): Class<any>[] {
-    return this.options.controllers ?? []
+  constructor(options: ApplicationOptions) {
+    this.basePath = options.basePath ?? ''
+    this.controllers = options.controllers ?? []
+    this.providers = options.providers ?? []
+    this.middlewares = options.middlewares ?? []
+    this.errorHandler = options.errorHandler
   }
 
   async instantiate(): Promise<Hono> {
     const app = new Hono()
 
-    const {
-      basePath = '',
-      controllers = [],
-      providers = [],
-      middlewares = [],
-      errorHandler,
-    } = this.options
-
-    for (const controller of controllers) {
-      const metadata = asControllerMetadata(controller[Symbol.metadata])
-      this.container.registerClass(metadata.token, controller)
-    }
-
-    for (const provider of providers) this.container.register(provider)
+    for (const provider of this.providers) this.container.register(provider)
 
     const getMiddleware = async (definition: MiddlewareDefinition): Promise<MiddlewareHandler> => {
       if (typeof definition !== 'symbol') return definition as MiddlewareHandler
@@ -52,10 +46,11 @@ export class Application {
       return instance.handle.bind(instance)
     }
 
-    const appMiddlewares = await Promise.all(middlewares.map(getMiddleware))
+    const appMiddlewares = await Promise.all(this.middlewares.map(getMiddleware))
 
-    for (const controller of controllers) {
+    for (const controller of this.controllers) {
       const metadata = asControllerMetadata(controller[Symbol.metadata])
+      this.container.registerClass(metadata.token, controller)
       const instance = await this.container.resolveAsync<any>(metadata.token)
 
       const controllerMiddlewares = await Promise.all(metadata.middlewares.map(getMiddleware))
@@ -65,7 +60,7 @@ export class Application {
 
         app.on(
           route.method,
-          normalizePath(`${basePath}/${metadata.prefix}/${route.path}`) as any,
+          normalizePath(`${this.basePath}/${metadata.prefix}/${route.path}`) as any,
           ...appMiddlewares,
           ...controllerMiddlewares,
           ...routeMiddlewares,
@@ -74,13 +69,12 @@ export class Application {
       }
     }
 
-    if (!errorHandler) return app
-
-    if ('provide' in errorHandler) {
-      this.container.register(errorHandler)
-      const instance = await this.container.resolveAsync<ErrorHandler>(errorHandler.provide)
-      app.onError(instance.handle.bind(instance))
-    } else app.onError(errorHandler)
+    if (this.errorHandler?.prototype && 'handle' in this.errorHandler.prototype) {
+      const token = createToken<EnshouErrorHandler>(this.errorHandler.name)
+      this.container.registerClass(token, this.errorHandler as any)
+      const errorHandlerInstance = await this.container.resolveAsync(token)
+      app.onError(errorHandlerInstance.handle.bind(errorHandlerInstance))
+    } else if (this.errorHandler) app.onError(this.errorHandler as any)
 
     return app
   }

@@ -14,17 +14,17 @@ import type {
 import { getOpenApiMeta } from './decorators'
 import { getSchemaName } from './schema'
 
-const PARAMETER_TARGETS = new Map([
-  ['query', 'query'],
-  ['param', 'path'],
-  ['header', 'header'],
-  ['cookie', 'cookie'],
-])
+const PARAMETER_TARGETS = {
+  query: 'query',
+  param: 'path',
+  header: 'header',
+  cookie: 'cookie',
+}
 
-const BODY_TARGETS = new Map([
-  ['json', 'application/json'],
-  ['form', 'multipart/form-data'],
-])
+const BODY_TARGETS = {
+  json: 'application/json',
+  form: 'multipart/form-data',
+}
 
 export class OpenApiBuilder {
   private readonly controllers: Class<any>[]
@@ -111,7 +111,7 @@ export class OpenApiBuilder {
       const parameters = this.buildParameters(schema)
       if (parameters.length > 0) operation.parameters = parameters
 
-      const requestBody = this.buildRequestBody(schema)
+      const requestBody = this.buildRequestBody(schema, operationMeta)
       if (requestBody) operation.requestBody = requestBody
     }
 
@@ -126,7 +126,7 @@ export class OpenApiBuilder {
   private buildParameters(schema: Record<string, any>): Record<string, unknown>[] {
     const parameters: Record<string, unknown>[] = []
 
-    for (const [target, openApiIn] of PARAMETER_TARGETS) {
+    for (const [target, openApiIn] of Object.entries(PARAMETER_TARGETS)) {
       const targetSchema = schema[target]
       if (!targetSchema) continue
 
@@ -153,11 +153,14 @@ export class OpenApiBuilder {
     return parameters
   }
 
-  private buildRequestBody(schema: Record<string, any>): Record<string, unknown> | undefined {
+  private buildRequestBody(
+    schema: Record<string, any>,
+    operationMeta?: OperationMeta,
+  ): Record<string, unknown> | undefined {
     const content: Record<string, unknown> = {}
     let hasBody = false
 
-    for (const [target, contentType] of BODY_TARGETS) {
+    for (const [target, contentType] of Object.entries(BODY_TARGETS)) {
       const targetSchema = schema[target]
       if (!targetSchema) continue
 
@@ -169,7 +172,10 @@ export class OpenApiBuilder {
 
     if (!hasBody) return undefined
 
-    return { required: true, content }
+    return {
+      required: operationMeta?.requestBodyRequired ?? true,
+      content,
+    }
   }
 
   private buildResponses(operationMeta: OperationMeta | undefined): Record<string, unknown> {
@@ -186,7 +192,7 @@ export class OpenApiBuilder {
 
       if (responseMeta.schema) {
         response.content = {
-          'application/json': {
+          [responseMeta.contentType ?? 'application/json']: {
             schema: this.resolveSchema(responseMeta.schema),
           },
         }
@@ -201,12 +207,13 @@ export class OpenApiBuilder {
   private resolveSchema(schema: unknown): JsonSchema {
     const name = getSchemaName(schema)
 
-    if (name) {
-      if (!this.componentSchemas.has(name))
-        this.componentSchemas.set(name, this.converter.toJsonSchema(schema))
+    if (!name) return this.converter.toJsonSchema(schema)
+
+    if (!this.componentSchemas.has(name)) {
+      this.componentSchemas.set(name, this.converter.toJsonSchema(schema))
     }
 
-    return this.converter.toJsonSchema(schema)
+    return { $ref: `#/components/schemas/${name}` }
   }
 
   private toOpenApiPath(path: string): string {

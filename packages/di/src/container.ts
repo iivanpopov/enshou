@@ -57,9 +57,6 @@ export class Container {
   private readonly singletonCache: Map<Token<unknown>, unknown> = new Map()
 
   register<T>(provider: Provider<T>): void {
-    if (typeof provider.provide !== 'symbol') {
-      throw new Error('DI token must be a Symbol')
-    }
     this.singletonCache.delete(provider.provide)
 
     if ('useValue' in provider) {
@@ -92,9 +89,6 @@ export class Container {
   }
 
   isRegistered<T>(token: Token<T>): boolean {
-    if (typeof token !== 'symbol') {
-      throw new Error('DI token must be a Symbol')
-    }
     return this.providers.has(token) || this.singletonCache.has(token)
   }
 
@@ -139,10 +133,6 @@ export class Container {
         })
 
         value = provider.useFactory(scoped, context)
-        if (value instanceof Promise)
-          throw new Error(
-            `Cannot resolve async factory for ${String(token)} synchronously. Use resolveAsync instead.`,
-          )
       } else {
         const metadata = (provider.useClass as any)[Symbol.metadata]
         const deps = (metadata?.injects ?? []).map((t: Token) => this._resolve(t, stack))
@@ -151,13 +141,7 @@ export class Container {
 
       if (provider.scope === 'singleton') this.singletonCache.set(token, value)
 
-      if (typeof (value as any)?.onModuleInit === 'function') {
-        const result = (value as any).onModuleInit()
-        if (result instanceof Promise)
-          throw new Error(
-            `Cannot resolve async onModuleInit for ${String(token)} synchronously. Use resolveAsync instead.`,
-          )
-      }
+      ;(value as any)?.onModuleInit?.()
 
       return value as T
     } finally {
@@ -212,7 +196,7 @@ export class Container {
 
       if (provider.scope === 'singleton') this.singletonCache.set(token, value)
 
-      if (typeof (value as any)?.onModuleInit === 'function') await (value as any).onModuleInit()
+      await (value as any)?.onModuleInit?.()
 
       return value as T
     } finally {

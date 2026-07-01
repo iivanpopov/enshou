@@ -30,6 +30,7 @@ export interface SecurityScheme {
 export interface ResponseMeta {
   description: string
   schema?: unknown
+  contentType?: string
 }
 
 export interface OperationMeta {
@@ -41,6 +42,7 @@ export interface OperationMeta {
   responses?: Record<number | string, ResponseMeta>
   security?: SecurityRequirement[]
   schema?: Record<string, any>
+  requestBodyRequired?: boolean
 }
 
 export type SecurityRequirement = Record<string, string[]>

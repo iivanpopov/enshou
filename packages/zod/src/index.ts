@@ -24,7 +24,11 @@ export function validate(schema: RouteSchema): MiddlewareHandler[] {
           path: issue.path?.map(String),
           message: issue.message,
         }))
-        throw RestException.UnprocessableEntity({ target: key, issues })
+        throw RestException.UnprocessableEntity({
+          message: 'Validation failed.',
+          target: key,
+          issues,
+        })
       }
 
       return result.data as any

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, expect, it } from 'vitest'
 
 import { Container, Inject, createToken } from '../src'
 
@@ -41,18 +41,6 @@ it('should call onModuleInit asynchronously', async () => {
   expect(called).toBe(true)
 })
 
-it('should throw if async onModuleInit is called synchronously', () => {
-  const TOKEN = createToken('token')
-
-  class Class {
-    async onModuleInit() {}
-  }
-
-  container.registerClass(TOKEN, Class)
-
-  expect(() => container.resolve(TOKEN)).toThrow('Cannot resolve async onModuleInit')
-})
-
 it('should return same value for value provider', () => {
   const TOKEN = createToken('token')
   const value = { PORT: 5000 }
@@ -70,14 +58,6 @@ it('should return correct instance for class provider', () => {
   container.registerClass(TOKEN, Class)
 
   expect(container.resolve(TOKEN)).toBeInstanceOf(Class)
-})
-
-it('should throw when registering value by class token', () => {
-  class Config {}
-
-  const value = new Config()
-
-  expect(() => container.registerValue(Config as any, value)).toThrow('DI token must be a Symbol')
 })
 
 it('should be singleton', () => {
@@ -343,197 +323,180 @@ it('should clean up resolution stack after failure', () => {
   expect(() => container.resolve(TOKEN_A)).not.toThrow()
 })
 
-describe('ResolutionContext', () => {
-  it('should pass different parent context per consumer', () => {
-    const LOGGER = createToken<string>('Logger')
-    const A_TOKEN = createToken<any>('A')
-    const B_TOKEN = createToken<any>('B')
+it('should pass different parent context per consumer', () => {
+  const LOGGER = createToken<string>('Logger')
+  const A_TOKEN = createToken<any>('A')
+  const B_TOKEN = createToken<any>('B')
 
-    @Inject(LOGGER)
-    class ClassA {
-      constructor(public logger: string) {}
-    }
+  @Inject(LOGGER)
+  class ClassA {
+    constructor(public logger: string) {}
+  }
 
-    @Inject(LOGGER)
-    class ClassB {
-      constructor(public logger: string) {}
-    }
+  @Inject(LOGGER)
+  class ClassB {
+    constructor(public logger: string) {}
+  }
 
-    container.register({
-      provide: LOGGER,
-      scope: 'transient',
-      useFactory: (_c, ctx) => ctx.parent?.useClass?.name ?? 'unknown',
-    })
-
-    container.registerClass(A_TOKEN, ClassA)
-    container.registerClass(B_TOKEN, ClassB)
-
-    expect(container.resolve(A_TOKEN).logger).toBe('ClassA')
-    expect(container.resolve(B_TOKEN).logger).toBe('ClassB')
+  container.register({
+    provide: LOGGER,
+    scope: 'transient',
+    useFactory: (_c, ctx) => ctx.parent?.useClass?.name ?? 'unknown',
   })
 
-  it('should provide root as the first frame in the chain', () => {
-    const LOGGER = createToken<string>('Logger')
-    const INNER = createToken<any>('Inner')
-    const OUTER = createToken<any>('Outer')
+  container.registerClass(A_TOKEN, ClassA)
+  container.registerClass(B_TOKEN, ClassB)
 
-    let parentName: string | undefined
-    let rootName: string | undefined
-    let stackLength = 0
-
-    @Inject(LOGGER)
-    class Inner {
-      constructor(public logger: string) {}
-    }
-
-    @Inject(INNER)
-    class Outer {
-      constructor(public inner: Inner) {}
-    }
-
-    container.register({
-      provide: LOGGER,
-      scope: 'transient',
-      useFactory: (_c, ctx) => {
-        parentName = ctx.parent?.useClass?.name
-        rootName = ctx.root?.useClass?.name
-        stackLength = ctx.stack.length
-        return ctx.root?.useClass?.name ?? 'no-root'
-      },
-    })
-
-    container.registerClass(INNER, Inner)
-    container.registerClass(OUTER, Outer)
-
-    const outer = container.resolve(OUTER)
-
-    expect(outer.inner.logger).toBe('Outer')
-    expect(parentName).toBe('Inner')
-    expect(rootName).toBe('Outer')
-    expect(stackLength).toBe(3)
-  })
-
-  it('should have no parent or root when factory is resolved at top level', () => {
-    const TOKEN = createToken<string>('TopLevel')
-    let hasParent = true
-    let rootToken: symbol | undefined
-    let stackLength = 0
-
-    container.register({
-      provide: TOKEN,
-      scope: 'transient',
-      useFactory: (_c, ctx) => {
-        hasParent = ctx.parent !== undefined
-        rootToken = ctx.root?.token as symbol | undefined
-        stackLength = ctx.stack.length
-        return 'value'
-      },
-    })
-
-    container.resolve(TOKEN)
-
-    expect(hasParent).toBe(false)
-    expect(rootToken).toBe(TOKEN)
-    expect(stackLength).toBe(1)
-  })
-
-  it('should detect circular dependency through factory container.resolve()', () => {
-    const TOKEN_A = createToken('A')
-    const TOKEN_B = createToken('B')
-
-    container.register({
-      provide: TOKEN_A,
-      useFactory: (c, _ctx) => c.resolve(TOKEN_B),
-    })
-
-    container.register({
-      provide: TOKEN_B,
-      useFactory: (c, _ctx) => c.resolve(TOKEN_A),
-    })
-
-    expect(() => container.resolve(TOKEN_A)).toThrow(/Circular dependency Symbol\(A\)/)
-  })
-
-  it('should pass stack as ReadonlyArray reflecting the resolution path', () => {
-    const DEP = createToken<string>('Dep')
-    const MID = createToken<any>('Mid')
-    const TOP = createToken<any>('Top')
-
-    let stackTokens: string[] = []
-
-    @Inject(DEP)
-    class Mid {
-      constructor(public dep: string) {}
-    }
-
-    @Inject(MID)
-    class Top {
-      constructor(public mid: Mid) {}
-    }
-
-    container.register({
-      provide: DEP,
-      scope: 'transient',
-      useFactory: (_c, ctx) => {
-        stackTokens = ctx.stack.map((f) => String(f.token))
-        return 'ok'
-      },
-    })
-
-    container.registerClass(MID, Mid)
-    container.registerClass(TOP, Top)
-
-    container.resolve(TOP)
-
-    expect(stackTokens).toEqual(['Symbol(Top)', 'Symbol(Mid)', 'Symbol(Dep)'])
-  })
+  expect(container.resolve(A_TOKEN).logger).toBe('ClassA')
+  expect(container.resolve(B_TOKEN).logger).toBe('ClassB')
 })
 
-describe('resolveAsync', () => {
-  it('should resolve async factory', async () => {
-    const TOKEN = createToken<string>('token')
+it('should provide root as the first frame in the chain', () => {
+  const LOGGER = createToken<string>('Logger')
+  const INNER = createToken<any>('Inner')
+  const OUTER = createToken<any>('Outer')
 
-    container.register({
-      provide: TOKEN,
-      useFactory: async () => {
-        return new Promise((resolve) => setTimeout(() => resolve('async value'), 10))
-      },
-    })
+  let parentName: string | undefined
+  let rootName: string | undefined
+  let stackLength = 0
 
-    const result = await container.resolveAsync(TOKEN)
-    expect(result).toBe('async value')
+  @Inject(LOGGER)
+  class Inner {
+    constructor(public logger: string) {}
+  }
+
+  @Inject(INNER)
+  class Outer {
+    constructor(public inner: Inner) {}
+  }
+
+  container.register({
+    provide: LOGGER,
+    scope: 'transient',
+    useFactory: (_c, ctx) => {
+      parentName = ctx.parent?.useClass?.name
+      rootName = ctx.root?.useClass?.name
+      stackLength = ctx.stack.length
+      return ctx.root?.useClass?.name ?? 'no-root'
+    },
   })
 
-  it('should resolve class with async dependencies', async () => {
-    const ASYNC_DEP = createToken<string>('async-dep')
-    const CLASS = createToken<MyClass>('class')
+  container.registerClass(INNER, Inner)
+  container.registerClass(OUTER, Outer)
 
-    @Inject(ASYNC_DEP)
-    class MyClass {
-      constructor(public dep: string) {}
-    }
+  const outer = container.resolve(OUTER)
 
-    container.register({
-      provide: ASYNC_DEP,
-      useFactory: async () => 'resolved async',
-    })
-    container.registerClass(CLASS, MyClass)
+  expect(outer.inner.logger).toBe('Outer')
+  expect(parentName).toBe('Inner')
+  expect(rootName).toBe('Outer')
+  expect(stackLength).toBe(3)
+})
 
-    const instance = await container.resolveAsync(CLASS)
-    expect(instance).toBeInstanceOf(MyClass)
-    expect(instance.dep).toBe('resolved async')
+it('should have no parent or root when factory is resolved at top level', () => {
+  const TOKEN = createToken<string>('TopLevel')
+  let hasParent = true
+  let rootToken: symbol | undefined
+  let stackLength = 0
+
+  container.register({
+    provide: TOKEN,
+    scope: 'transient',
+    useFactory: (_c, ctx) => {
+      hasParent = ctx.parent !== undefined
+      rootToken = ctx.root?.token as symbol | undefined
+      stackLength = ctx.stack.length
+      return 'value'
+    },
   })
 
-  it('should throw when trying to resolve async factory synchronously', () => {
-    const TOKEN = createToken<string>('token')
+  container.resolve(TOKEN)
 
-    container.register({
-      provide: TOKEN,
-      useFactory: async () => 'value',
-    })
+  expect(hasParent).toBe(false)
+  expect(rootToken).toBe(TOKEN)
+  expect(stackLength).toBe(1)
+})
 
-    expect(() => container.resolve(TOKEN)).toThrow(
-      'Cannot resolve async factory for Symbol(token) synchronously. Use resolveAsync instead.',
-    )
+it('should detect circular dependency through factory container.resolve()', () => {
+  const TOKEN_A = createToken('A')
+  const TOKEN_B = createToken('B')
+
+  container.register({
+    provide: TOKEN_A,
+    useFactory: (c, _ctx) => c.resolve(TOKEN_B),
   })
+
+  container.register({
+    provide: TOKEN_B,
+    useFactory: (c, _ctx) => c.resolve(TOKEN_A),
+  })
+
+  expect(() => container.resolve(TOKEN_A)).toThrow(/Circular dependency Symbol\(A\)/)
+})
+
+it('should pass stack as ReadonlyArray reflecting the resolution path', () => {
+  const DEP = createToken<string>('Dep')
+  const MID = createToken<any>('Mid')
+  const TOP = createToken<any>('Top')
+
+  let stackTokens: string[] = []
+
+  @Inject(DEP)
+  class Mid {
+    constructor(public dep: string) {}
+  }
+
+  @Inject(MID)
+  class Top {
+    constructor(public mid: Mid) {}
+  }
+
+  container.register({
+    provide: DEP,
+    scope: 'transient',
+    useFactory: (_c, ctx) => {
+      stackTokens = ctx.stack.map((f) => String(f.token))
+      return 'ok'
+    },
+  })
+
+  container.registerClass(MID, Mid)
+  container.registerClass(TOP, Top)
+
+  container.resolve(TOP)
+
+  expect(stackTokens).toEqual(['Symbol(Top)', 'Symbol(Mid)', 'Symbol(Dep)'])
+})
+
+it('should resolve async factory', async () => {
+  const TOKEN = createToken<string>('token')
+
+  container.register({
+    provide: TOKEN,
+    useFactory: async () => {
+      return new Promise((resolve) => setTimeout(() => resolve('async value'), 10))
+    },
+  })
+
+  const result = await container.resolveAsync(TOKEN)
+  expect(result).toBe('async value')
+})
+
+it('should resolve class with async dependencies', async () => {
+  const ASYNC_DEP = createToken<string>('async-dep')
+  const CLASS = createToken<MyClass>('class')
+
+  @Inject(ASYNC_DEP)
+  class MyClass {
+    constructor(public dep: string) {}
+  }
+
+  container.register({
+    provide: ASYNC_DEP,
+    useFactory: async () => 'resolved async',
+  })
+  container.registerClass(CLASS, MyClass)
+
+  const instance = await container.resolveAsync(CLASS)
+  expect(instance).toBeInstanceOf(MyClass)
+  expect(instance.dep).toBe('resolved async')
 })
