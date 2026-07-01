@@ -23,7 +23,7 @@
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm build && pnpm lint-staged && pnpm test",
-    "prepare-commit-msg": "bun ./scripts/prepare-commit-msg.ts $1"
+    "prepare-commit-msg": "bun ./scripts/prepare-commit-msg $1"
   },
   "lint-staged": {
     "*": [

@@ -1,7 +1,7 @@
 {
   "name": "example-core",
   "scripts": {
-    "dev": "bun --hot src/index.ts"
+    "dev": "bun --hot src/index"
   },
   "dependencies": {
     "@enshou/core": "workspace:*",

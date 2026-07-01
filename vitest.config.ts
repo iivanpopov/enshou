@@ -1,6 +1,6 @@
 import swc from 'unplugin-swc'
 
-export const vitestBaseConfig = {
+export const vitestConfig = {
   test: {
     environment: 'node',
   },

@@ -1,7 +1,7 @@
 {
   "name": "example-di",
   "scripts": {
-    "dev": "bun src/index.ts"
+    "dev": "bun src/index"
   },
   "dependencies": {
     "@enshou/di": "workspace:*"

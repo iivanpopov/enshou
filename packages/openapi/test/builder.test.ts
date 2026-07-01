@@ -1,5 +1,5 @@
 import { Controller, Get, Post } from '@enshou/core'
-import { describe, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
 
 import { ApiOperation, OpenApiBuilder } from '../src'
 
@@ -38,48 +38,46 @@ class MyController {
   createUser() {}
 }
 
-describe('OpenAPI validation schema integration', () => {
-  it('should build parameters from @ApiOperation schema', () => {
-    const builder = new OpenApiBuilder({
-      controllers: [MyController],
-      schemaConverter: { toJsonSchema: (s: any) => s },
-      info: { title: 'Test API', version: '1.0.0' },
-    })
-
-    const doc = builder.toDocument()
-
-    expect(doc.paths['/users']?.['get']).toBeDefined()
-    const getOp = doc.paths['/users']?.['get'] as any
-    expect(getOp.summary).toBe('Get users')
-    expect(getOp.parameters).toEqual([
-      {
-        name: 'q',
-        in: 'query',
-        schema: { type: 'string' },
-        required: true,
-      },
-    ])
+it('should build parameters from @ApiOperation schema', () => {
+  const builder = new OpenApiBuilder({
+    controllers: [MyController],
+    schemaConverter: { toJsonSchema: (s: any) => s },
+    info: { title: 'Test API', version: '1.0.0' },
   })
 
-  it('should build request body from @ApiOperation schema', () => {
-    const builder = new OpenApiBuilder({
-      controllers: [MyController],
-      schemaConverter: { toJsonSchema: (s: any) => s },
-      info: { title: 'Test API', version: '1.0.0' },
-    })
+  const doc = builder.toDocument()
 
-    const doc = builder.toDocument()
-
-    expect(doc.paths['/users']?.['post']).toBeDefined()
-    const postOp = doc.paths['/users']?.['post'] as any
-    expect(postOp.summary).toBe('Create user')
-    expect(postOp.requestBody).toEqual({
+  expect(doc.paths['/users']?.['get']).toBeDefined()
+  const getOp = doc.paths['/users']?.['get'] as any
+  expect(getOp.summary).toBe('Get users')
+  expect(getOp.parameters).toEqual([
+    {
+      name: 'q',
+      in: 'query',
+      schema: { type: 'string' },
       required: true,
-      content: {
-        'application/json': {
-          schema: bodySchema,
-        },
+    },
+  ])
+})
+
+it('should build request body from @ApiOperation schema', () => {
+  const builder = new OpenApiBuilder({
+    controllers: [MyController],
+    schemaConverter: { toJsonSchema: (s: any) => s },
+    info: { title: 'Test API', version: '1.0.0' },
+  })
+
+  const doc = builder.toDocument()
+
+  expect(doc.paths['/users']?.['post']).toBeDefined()
+  const postOp = doc.paths['/users']?.['post'] as any
+  expect(postOp.summary).toBe('Create user')
+  expect(postOp.requestBody).toEqual({
+    required: true,
+    content: {
+      'application/json': {
+        schema: bodySchema,
       },
-    })
+    },
   })
 })
