@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
 import { Inject, createToken } from '@enshou/di'
-import { expect, it, vi } from 'vitest'
+import { expect, it, mock } from 'bun:test'
 
 import { Application } from '../src/application'
 import { Controller, Delete, Get, Post, Put } from '../src/decorators'
@@ -113,7 +113,7 @@ it('should use custom error handler', async () => {
     }
   }
 
-  const handler = vi.fn<(_err: Error, c: Context) => Response | Promise<Response>>((_err, c) =>
+  const handler = mock<(_err: Error, c: Context) => Response | Promise<Response>>((_err, c) =>
     c.json({ caught: true }, 500),
   )
 
@@ -124,7 +124,7 @@ it('should use custom error handler', async () => {
 
   const res = await hono.request('/err')
   expect(res.status).toBe(500)
-  expect(handler).toHaveBeenCalledOnce()
+  expect(handler).toHaveBeenCalledTimes(1)
 })
 
 it('should resolve provider classes and inject into controller', async () => {

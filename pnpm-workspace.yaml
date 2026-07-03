@@ -4,6 +4,7 @@ packages:
 
 allowBuilds:
   '@swc/core': true
+  lefthook: set this to true or false
   simple-git-hooks: true
 
 catalog:

@@ -32,8 +32,7 @@
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "catalog:",
-    "valibot": "catalog:",
-    "vitest": "catalog:"
+    "valibot": "catalog:"
   },
   "peerDependencies": {
     "@enshou/core": "workspace:*",

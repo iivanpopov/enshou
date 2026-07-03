@@ -2,7 +2,7 @@ import type { Ctx } from '@enshou/core'
 import type { Context } from 'hono'
 
 import { Application, Controller, Post, RestException, Use } from '@enshou/core'
-import { expect, it } from 'vitest'
+import { expect, it } from 'bun:test'
 import * as z from 'zod'
 
 import type { InferSchema } from '../src'

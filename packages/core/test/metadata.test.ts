@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono'
 
-import { expect, it } from 'vitest'
+import { expect, it } from 'bun:test'
 
 import { Application } from '../src/application'
 import { Controller, Delete, Get, Patch, Post, Put, Use } from '../src/decorators'

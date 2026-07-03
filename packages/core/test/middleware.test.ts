@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono'
 
 import { createToken, Inject } from '@enshou/di'
-import { expect, it, vi } from 'vitest'
+import { expect, it, mock } from 'bun:test'
 
 import type { Middleware } from '../src/middleware'
 
@@ -10,7 +10,7 @@ import { Controller, Get, Use } from '../src/decorators'
 
 it('should apply injectable middleware', async () => {
   const TEST_MIDDLEWARE_TOKEN = createToken<TestMiddleware>('test-middleware')
-  const middlewareSpy = vi.fn<() => void>()
+  const middlewareSpy = mock<() => void>()
 
   class TestMiddleware implements Middleware {
     async handle(c: Context, next: Next) {
@@ -41,7 +41,7 @@ it('should apply injectable middleware', async () => {
 
 it('should apply controller-wide middleware', async () => {
   const GLOBAL_MIDDLEWARE_TOKEN = createToken<GlobalMiddleware>('global-middleware')
-  const middlewareSpy = vi.fn<() => void>()
+  const middlewareSpy = mock<() => void>()
 
   class GlobalMiddleware implements Middleware {
     async handle(c: Context, next: Next) {

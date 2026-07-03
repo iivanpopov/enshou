@@ -28,7 +28,6 @@
     "@swc/core": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "unplugin-swc": "catalog:",
-    "vitest": "catalog:"
+    "unplugin-swc": "catalog:"
   }
 }

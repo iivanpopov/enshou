@@ -1,5 +1,5 @@
 import { Controller, Get, Post } from '@enshou/core'
-import { expect, it } from 'vitest'
+import { expect, it } from 'bun:test'
 
 import { ApiOperation, OpenApiBuilder } from '../src'
 
