@@ -21,7 +21,6 @@
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
-    "prepack": "cp ../../LICENSE ./",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
