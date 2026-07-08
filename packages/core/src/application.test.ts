@@ -3,8 +3,8 @@ import type { Context } from 'hono'
 import { Inject, createToken } from '@enshou/di'
 import { expect, it, mock } from 'bun:test'
 
-import { Application } from '../src/application'
-import { Controller, Delete, Get, Post, Put } from '../src/decorators'
+import { Application } from './application'
+import { Controller, Delete, Get, Post, Put } from './decorators'
 
 it('should return a Hono instance', async () => {
   const app = await new Application({}).instantiate()

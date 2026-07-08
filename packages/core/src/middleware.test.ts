@@ -3,10 +3,10 @@ import type { Context, Next } from 'hono'
 import { createToken, Inject } from '@enshou/di'
 import { expect, it, mock } from 'bun:test'
 
-import type { Middleware } from '../src/middleware'
+import type { Middleware } from './middleware'
 
-import { Application } from '../src/application'
-import { Controller, Get, Use } from '../src/decorators'
+import { Application } from './application'
+import { Controller, Get, Use } from './decorators'
 
 it('should apply injectable middleware', async () => {
   const TEST_MIDDLEWARE_TOKEN = createToken<TestMiddleware>('test-middleware')

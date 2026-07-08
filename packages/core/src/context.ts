@@ -1,15 +1,12 @@
 import type { Context, Env as HonoEnv } from 'hono'
 import type { BlankEnv } from 'hono/types'
 
-export interface GlobalEnv extends HonoEnv {}
+export interface GlobalEnv {}
 
-type MergeEnv<A extends HonoEnv, B extends HonoEnv> = {
-  Bindings: A['Bindings'] & B['Bindings']
-  Variables: A['Variables'] & B['Variables']
-}
+export type InternalEnv = keyof GlobalEnv extends never ? BlankEnv : GlobalEnv
 
-export type Ctx<Out = {}, E extends HonoEnv = BlankEnv> = Context<
-  MergeEnv<GlobalEnv, E>,
+export type Ctx<Out = {}, Env extends HonoEnv = never> = Context<
+  Env extends never ? InternalEnv : Env,
   any,
   { out: Out & {} }
 >

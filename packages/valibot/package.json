@@ -20,13 +20,12 @@
   },
   "scripts": {
     "build": "tsdown",
-    "test": "vitest run",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "@enshou/core": "workspace:*",
     "@types/bun": "catalog:",
-    "@valibot/to-json-schema": "^1.0.0",
+    "@valibot/to-json-schema": "^1.7.1",
     "hono": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",

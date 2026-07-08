@@ -1,16 +1,17 @@
 import { createToken } from '@enshou/di'
 
+import type { AnyFunction } from '#shared/types'
+
+import type { HttpMethod } from './metadata'
 import type { MiddlewareDefinition } from './middleware'
-import type { AnyFunction } from './utils'
 
 import { asControllerMetadata } from './metadata'
-import { HttpMethod, normalizePath } from './utils'
 
 export function Controller(prefix: string = '/') {
   return function (_target: any, context: ClassDecoratorContext): void {
     const metadata = asControllerMetadata(context.metadata)
     metadata.prefix = prefix
-    metadata.token = createToken(context.name || 'AnonymousController')
+    metadata.token = createToken(context.name!)
   }
 }
 
@@ -43,16 +44,15 @@ function createMethodDecorator(method: HttpMethod): RouteDecoratorFactory {
         | ClassMethodDecoratorContext<object, AnyFunction>
         | ClassFieldDecoratorContext<object, AnyFunction>,
     ): void | ((initialValue: AnyFunction) => AnyFunction) {
-      const handlerName = String(context.name)
-      const metadata = asControllerMetadata(context.metadata)
+      const controllerMetadata = asControllerMetadata(context.metadata)
 
-      if (!metadata.routes.has(handlerName)) {
-        metadata.routes.set(handlerName, {
-          method,
-          path: normalizePath(path),
-          middlewares: [],
-        })
-      }
+      const handlerName = String(context.name)
+      const handlerMetadata = controllerMetadata.routes.get(handlerName)
+
+      if (!handlerMetadata) {
+        controllerMetadata.routes.set(handlerName, { method, path, middlewares: [] })
+      } else if (handlerMetadata && !!handlerMetadata.middlewares.length)
+        controllerMetadata.routes.set(handlerName, { ...handlerMetadata, method, path })
 
       if (context.kind === 'method') return
 
@@ -63,30 +63,27 @@ function createMethodDecorator(method: HttpMethod): RouteDecoratorFactory {
   }
 }
 
-export const Get: RouteDecoratorFactory = createMethodDecorator(HttpMethod.GET)
-export const Post: RouteDecoratorFactory = createMethodDecorator(HttpMethod.POST)
-export const Put: RouteDecoratorFactory = createMethodDecorator(HttpMethod.PUT)
-export const Patch: RouteDecoratorFactory = createMethodDecorator(HttpMethod.PATCH)
-export const Delete: RouteDecoratorFactory = createMethodDecorator(HttpMethod.DELETE)
+export const Get: RouteDecoratorFactory = createMethodDecorator('GET')
+export const Post: RouteDecoratorFactory = createMethodDecorator('POST')
+export const Put: RouteDecoratorFactory = createMethodDecorator('PUT')
+export const Patch: RouteDecoratorFactory = createMethodDecorator('PATCH')
+export const Delete: RouteDecoratorFactory = createMethodDecorator('DELETE')
 
 export function Use(...middlewares: MiddlewareDefinition[]) {
   return function (
     _value: any,
     context: ClassDecoratorContext | ClassMethodDecoratorContext | ClassFieldDecoratorContext,
   ): void {
-    const metadata = asControllerMetadata(context.metadata)
+    const controllerMetadata = asControllerMetadata(context.metadata)
 
     if (context.kind === 'class') {
-      metadata.middlewares.unshift(...middlewares)
+      controllerMetadata.middlewares.unshift(...middlewares)
       return
     }
 
     const handlerName = String(context.name)
-    const route = metadata.routes?.get(handlerName)
+    const routeMetadata = controllerMetadata.routes.get(handlerName)
 
-    if (!route)
-      throw Error(`@Use decorator on '${handlerName}' must be placed ABOVE the route decorator.`)
-
-    route.middlewares.unshift(...middlewares)
+    routeMetadata!.middlewares.unshift(...middlewares)
   }
 }

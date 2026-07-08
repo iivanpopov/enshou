@@ -1,17 +1,17 @@
-import type { Token } from './token'
+import type { Class } from '#shared/types'
 
-export type Class<T> = new (...args: any[]) => T
+import type { Token } from './token'
 
 export type Scope = 'singleton' | 'transient'
 
 export interface ResolutionFrame {
-  token: Token<unknown>
+  token: Token
   kind: 'class' | 'factory' | 'value'
   useClass?: Class<unknown>
 }
 
 export interface ResolutionContext {
-  token: Token<unknown>
+  token: Token
   stack: ReadonlyArray<ResolutionFrame>
   parent?: ResolutionFrame
   root?: ResolutionFrame
@@ -38,23 +38,23 @@ export interface FactoryProvider<T> {
 
 export type Provider<T> = ClassProvider<T> | ValueProvider<T> | FactoryProvider<T>
 
-interface RegisteredClassProvider<T> {
+interface RegisteredClassProvider {
   kind: 'class'
-  useClass: Class<T>
+  useClass: Class<any>
   scope: Scope
 }
 
-interface RegisteredFactoryProvider<T> {
+interface RegisteredFactoryProvider {
   kind: 'factory'
-  useFactory: UseFactory<T>
+  useFactory: UseFactory<any>
   scope: Scope
 }
 
-type RegisteredProvider<T> = RegisteredClassProvider<T> | RegisteredFactoryProvider<T>
+type RegisteredProvider = RegisteredClassProvider | RegisteredFactoryProvider
 
 export class Container {
-  private readonly providers: Map<Token<unknown>, RegisteredProvider<any>> = new Map()
-  private readonly singletonCache: Map<Token<unknown>, unknown> = new Map()
+  private readonly providers: Map<Token, RegisteredProvider> = new Map()
+  private readonly singletonCache: Map<Token, unknown> = new Map()
 
   register<T>(provider: Provider<T>): void {
     this.singletonCache.delete(provider.provide)
@@ -88,6 +88,10 @@ export class Container {
     this.register({ provide: token, useClass: value, scope })
   }
 
+  registerFactory<T>(token: Token<T>, factory: UseFactory<T>, scope: Scope = 'singleton'): void {
+    this.register({ provide: token, useFactory: factory, scope })
+  }
+
   isRegistered<T>(token: Token<T>): boolean {
     return this.providers.has(token) || this.singletonCache.has(token)
   }
@@ -117,7 +121,7 @@ export class Container {
     stack.push(frame)
 
     try {
-      let value: unknown
+      let value: any
 
       if (provider.kind === 'factory') {
         const context: ResolutionContext = {
@@ -135,13 +139,13 @@ export class Container {
         value = provider.useFactory(scoped, context)
       } else {
         const metadata = (provider.useClass as any)[Symbol.metadata]
-        const deps = (metadata?.injects ?? []).map((t: Token) => this._resolve(t, stack))
+        const deps = metadata?.injects?.map((t: Token) => this._resolve(t, stack))
         value = new provider.useClass(...deps)
       }
 
       if (provider.scope === 'singleton') this.singletonCache.set(token, value)
 
-      ;(value as any)?.onModuleInit?.()
+      value.onModuleInit?.()
 
       return value as T
     } finally {
@@ -166,7 +170,7 @@ export class Container {
     stack.push(frame)
 
     try {
-      let value: unknown
+      let value: any
 
       if (provider.kind === 'factory') {
         const context: ResolutionContext = {
@@ -187,16 +191,14 @@ export class Container {
         value = await provider.useFactory(scoped, context)
       } else {
         const metadata = (provider.useClass as any)[Symbol.metadata]
-        const depsPromises = (metadata?.injects ?? []).map((t: Token) =>
-          this._resolveAsync(t, stack),
-        )
+        const depsPromises = metadata?.injects?.map((t: Token) => this._resolveAsync(t, stack))
         const deps = await Promise.all(depsPromises)
         value = new provider.useClass(...deps)
       }
 
       if (provider.scope === 'singleton') this.singletonCache.set(token, value)
 
-      await (value as any)?.onModuleInit?.()
+      await value.onModuleInit?.()
 
       return value as T
     } finally {

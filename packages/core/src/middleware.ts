@@ -1,8 +1,11 @@
 import type { Token } from '@enshou/di'
-import type { Context, MiddlewareHandler, Next } from 'hono'
+import type { MiddlewareHandler } from 'hono'
+import type { Env as HonoEnv } from 'hono'
 
-export interface Middleware {
-  handle(c: Context, next: Next): Promise<Response | void>
+import type { InternalEnv } from './context'
+
+export interface Middleware<Env extends HonoEnv = InternalEnv> {
+  handle: MiddlewareHandler<Env>
 }
 
 export type MiddlewareDefinition = Token<Middleware> | MiddlewareHandler

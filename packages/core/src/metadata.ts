@@ -1,7 +1,8 @@
 import type { Token } from '@enshou/di'
 
 import type { MiddlewareDefinition } from './middleware'
-import type { HttpMethod } from './utils'
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'
 
 export interface RouteDefinition {
   method: HttpMethod

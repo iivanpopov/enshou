@@ -1,6 +1,7 @@
 {
   "references": [
     { "path": "./scripts" },
+    { "path": "./shared" },
     { "path": "./packages/core" },
     { "path": "./packages/di" },
     { "path": "./packages/openapi" },
