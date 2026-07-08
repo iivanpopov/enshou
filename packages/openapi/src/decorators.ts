@@ -1,18 +1,18 @@
-import type { OpenApiControllerMeta, OperationMeta, SecurityRequirement } from './types'
+import type { OpenapiMetadata, OperationMeta, SecurityRequirement } from './types'
 
-if (!Symbol.metadata) {
-  ;(Symbol as any).metadata = Symbol.for('Symbol.metadata')
-}
+export function asControllerMetadata(metadata: any): OpenapiMetadata {
+  metadata.openapi ??= {
+    operations: new Map(),
+  }
 
-export function getOpenApiMeta(metadata: Record<PropertyKey, any>): OpenApiControllerMeta {
-  metadata.openapi ??= { operations: new Map() }
-  return metadata.openapi as OpenApiControllerMeta
+  return metadata
 }
 
 export function ApiTag(name: string, description?: string) {
   return function (_target: any, context: ClassDecoratorContext): void {
-    const meta = getOpenApiMeta(context.metadata)
-    meta.tag = { name, description }
+    const metadata = asControllerMetadata(context.metadata)
+
+    metadata.openapi.tag = { name, description }
   }
 }
 
@@ -21,12 +21,13 @@ export function ApiOperation(operation: OperationMeta) {
     _value: any,
     context: ClassMethodDecoratorContext | ClassFieldDecoratorContext,
   ): void {
-    const meta = getOpenApiMeta(context.metadata)
-    const handlerName = String(context.name)
-    const existing = meta.operations.get(handlerName)
+    const metadata = asControllerMetadata(context.metadata)
 
-    if (existing) meta.operations.set(handlerName, { ...existing, ...operation })
-    else meta.operations.set(handlerName, operation)
+    const handlerName = String(context.name)
+    const existing = metadata.openapi.operations.get(handlerName)
+
+    if (existing) metadata.openapi.operations.set(handlerName, { ...existing, ...operation })
+    else metadata.openapi.operations.set(handlerName, operation)
   }
 }
 
@@ -35,17 +36,17 @@ export function ApiSecurity(...requirements: SecurityRequirement[]) {
     _value: any,
     context: ClassDecoratorContext | ClassMethodDecoratorContext | ClassFieldDecoratorContext,
   ): void {
-    const meta = getOpenApiMeta(context.metadata)
+    const metadata = asControllerMetadata(context.metadata)
 
     if (context.kind === 'class') {
-      meta.security = requirements
+      metadata.openapi.security = requirements
       return
     }
 
     const handlerName = String(context.name)
-    const existing = meta.operations.get(handlerName)
+    const existing = metadata.openapi.operations.get(handlerName)
 
     if (existing) existing.security = requirements
-    else meta.operations.set(handlerName, { security: requirements })
+    else metadata.openapi.operations.set(handlerName, { security: requirements })
   }
 }

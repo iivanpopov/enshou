@@ -139,7 +139,7 @@ export class Container {
         value = provider.useFactory(scoped, context)
       } else {
         const metadata = (provider.useClass as any)[Symbol.metadata]
-        const deps = metadata?.injects?.map((t: Token) => this._resolve(t, stack))
+        const deps = metadata?.injects?.map((t: Token) => this._resolve(t, stack)) ?? []
         value = new provider.useClass(...deps)
       }
 
@@ -192,7 +192,7 @@ export class Container {
       } else {
         const metadata = (provider.useClass as any)[Symbol.metadata]
         const depsPromises = metadata?.injects?.map((t: Token) => this._resolveAsync(t, stack))
-        const deps = await Promise.all(depsPromises)
+        const deps = await Promise.all(depsPromises ?? [])
         value = new provider.useClass(...deps)
       }
 

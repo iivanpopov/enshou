@@ -58,6 +58,11 @@ export interface OpenApiControllerMeta {
   security?: SecurityRequirement[]
 }
 
+export interface OpenapiMetadata {
+  openapi: OpenApiControllerMeta
+  [key: PropertyKey]: any
+}
+
 export interface OpenApiBuilderOptions {
   controllers: (new (...args: any[]) => any)[]
   schemaConverter: SchemaConverter

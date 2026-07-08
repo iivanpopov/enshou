@@ -1,4 +1,4 @@
-if (!Symbol.metadata) (Symbol as any).metadata = Symbol.for('Symbol.metadata')
+import '#shared/polyfill'
 
 export * from './container'
 export * from './inject'

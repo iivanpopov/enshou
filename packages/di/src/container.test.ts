@@ -53,7 +53,7 @@ it('should return same pointer for value provider', () => {
   expect(container.resolve(TOKEN)).toBe(value)
 })
 
-it('should return correct instance for class provider without inject decorator', () => {
+it('should resolve class', () => {
   const TOKEN = createToken()
   class Class {}
 
@@ -240,7 +240,7 @@ it('should throw on circular dependency', () => {
   expect(() => container.resolve(TOKEN_A)).toThrow(/Circular dependency Symbol\(token-a\)/)
 })
 
-it('should provide correct resolution context (root, parent, stack)', () => {
+it('should provide correct resolution context', () => {
   const LOGGER = createToken<string>('Logger')
   const INNER = createToken<any>('Inner')
   const OUTER = createToken<any>('Outer')

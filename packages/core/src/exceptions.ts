@@ -1,4 +1,5 @@
 import type { ErrorHandler } from 'hono/types'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 
 import { HTTPException } from 'hono/http-exception'
 
@@ -7,7 +8,6 @@ export type HonoErrorHandler = ErrorHandler
 export interface EnshouErrorHandler {
   handle: HonoErrorHandler
 }
-import type { ContentfulStatusCode } from 'hono/utils/http-status'
 
 interface RestExceptionOptions {
   payload?: unknown
