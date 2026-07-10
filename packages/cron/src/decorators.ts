@@ -1,6 +1,8 @@
+import type { CronWithAutocomplete } from 'bun'
+
 import type { AnyFunction } from '#shared/types'
 
-import { asControllerMetadata } from '#shared/metadata'
+import { asCronMetadata } from './metadata'
 
 type CronDecorator = {
   (_value: AnyFunction, context: ClassMethodDecoratorContext<object, AnyFunction>): void
@@ -10,7 +12,7 @@ type CronDecorator = {
   ): (initialValue: AnyFunction) => AnyFunction
 }
 
-export function Cron(pattern: string): CronDecorator {
+export function Cron(pattern: CronWithAutocomplete): CronDecorator {
   function decorator(
     _value: AnyFunction,
     context: ClassMethodDecoratorContext<object, AnyFunction>,
@@ -25,11 +27,11 @@ export function Cron(pattern: string): CronDecorator {
       | ClassMethodDecoratorContext<object, AnyFunction>
       | ClassFieldDecoratorContext<object, AnyFunction>,
   ): void | ((initialValue: AnyFunction) => AnyFunction) {
-    const controllerMetadata = asControllerMetadata(context.metadata)
+    const controllerMetadata = asCronMetadata(context.metadata)
 
-    const handlerName = String(context.name)
+    const methodName = String(context.name)
 
-    controllerMetadata.jobs.set(handlerName, pattern)
+    controllerMetadata.jobs.set(methodName, pattern)
 
     if (context.kind === 'method') return
 

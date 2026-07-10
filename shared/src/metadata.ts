@@ -4,8 +4,6 @@ export interface ControllerMetadata {
   middlewares: any[]
   token?: any
 
-  jobs: Map<string, string>
-
   openapi: {
     operations: Map<string, any>
     tag?: any
@@ -16,7 +14,6 @@ export interface ControllerMetadata {
 export function asControllerMetadata(metadata: any): ControllerMetadata {
   metadata.routes ??= new Map()
   metadata.middlewares ??= []
-  metadata.jobs ??= new Map()
   metadata.openapi ??= {
     operations: new Map(),
   }

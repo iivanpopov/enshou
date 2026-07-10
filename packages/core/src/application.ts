@@ -24,23 +24,7 @@ export interface ApplicationOptions {
 }
 
 export class Application {
-  readonly container: Container
-  readonly basePath: string
-  readonly controllers: Class<any>[]
-  readonly providers: Provider<unknown>[]
-  readonly middlewares: MiddlewareDefinition[]
-  readonly plugins: PluginDefinition[]
-  readonly errorHandler?: Class<EnshouErrorHandler> | HonoErrorHandler
-
-  constructor(options: ApplicationOptions) {
-    this.container = options.container ?? new Container()
-    this.basePath = options.basePath ?? ''
-    this.controllers = options.controllers ?? []
-    this.providers = options.providers ?? []
-    this.middlewares = options.middlewares ?? []
-    this.plugins = options.plugins ?? []
-    this.errorHandler = options.errorHandler
-  }
+  constructor(public readonly options: ApplicationOptions) {}
 
   private async _resolveMiddlewares(
     middlewares: MiddlewareDefinition[],
@@ -48,32 +32,34 @@ export class Application {
     return await Promise.all(
       middlewares.map(async (middleware) => {
         if (typeof middleware !== 'symbol') return middleware
-        const instance = await this.container.resolveAsync<Middleware>(middleware)
+        const instance = await this.options.container.resolveAsync<Middleware>(middleware)
         return instance.handle.bind(instance)
       }),
     )
   }
 
   async instantiate(): Promise<Hono> {
-    const application = new Hono()
+    const hono = new Hono()
 
-    for (const provider of this.providers) this.container.register(provider)
+    for (const provider of this.options.providers) {
+      this.options.container.register(provider)
+    }
 
-    const appMiddlewares = await this._resolveMiddlewares(this.middlewares)
+    const appMiddlewares = await this._resolveMiddlewares(this.options.middlewares)
 
-    for (const controller of this.controllers) {
+    for (const controller of this.options.controllers) {
       const metadata = asControllerMetadata(controller[Symbol.metadata])
-      this.container.registerClass(metadata.token, controller)
-      const instance = await this.container.resolveAsync<any>(metadata.token)
+      this.options.container.registerClass(metadata.token, controller)
+      const instance = await this.options.container.resolveAsync<any>(metadata.token)
 
       const controllerMiddlewares = await this._resolveMiddlewares(metadata.middlewares)
 
       for (const [handlerName, route] of metadata.routes.entries()) {
         const routeMiddlewares = await this._resolveMiddlewares(route.middlewares)
 
-        application.on(
+        hono.on(
           route.method,
-          normalizePath(`${this.basePath}/${metadata.prefix}/${route.path}`) as any,
+          normalizePath(`${this.options.basePath}/${metadata.prefix}/${route.path}`) as any,
           ...appMiddlewares,
           ...controllerMiddlewares,
           ...routeMiddlewares,
@@ -82,13 +68,23 @@ export class Application {
       }
     }
 
-    if (isClass(this.errorHandler)) {
-      const token = createToken<EnshouErrorHandler>(this.errorHandler.name)
-      this.container.registerClass(token, this.errorHandler)
-      const errorHandler = await this.container.resolveAsync(token)
-      application.onError(errorHandler.handle.bind(errorHandler))
-    } else if (typeof this.errorHandler === 'function') application.onError(this.errorHandler)
+    if (isClass(this.options.errorHandler)) {
+      const token = createToken<EnshouErrorHandler>(this.options.errorHandler.name)
+      this.options.container.registerClass(token, this.options.errorHandler)
+      const errorHandler = await this.options.container.resolveAsync(token)
+      hono.onError(errorHandler.handle.bind(errorHandler))
+    } else if (typeof this.options.errorHandler === 'function') {
+      hono.onError(this.options.errorHandler)
+    }
 
-    return application
+    for (const plugin of this.options.plugins) {
+      await plugin.onApplicationInit({
+        application: this,
+        hono,
+        options: this.options,
+      })
+    }
+
+    return hono
   }
 }

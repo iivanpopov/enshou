@@ -71,6 +71,9 @@ importers:
       '@enshou/core':
         specifier: workspace:*
         version: link:../core
+      '@enshou/di':
+        specifier: workspace:*
+        version: link:../di
       '@types/bun':
         specifier: 'catalog:'
         version: 1.3.14
