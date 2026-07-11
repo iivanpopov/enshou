@@ -1,5 +1,3 @@
-import type { Class } from '#shared/types'
-
 import { asControllerMetadata } from '#shared/metadata'
 import { compactObject, normalizePath } from '#shared/utils'
 
@@ -13,7 +11,7 @@ import type {
 
 import { getSchemaName } from './schema'
 
-const PARAMETER_TARGETS: Record<string, string> = {
+const PARAMETER_TARGETS = {
   query: 'query',
   param: 'path',
   header: 'header',
@@ -43,7 +41,7 @@ export function buildDocument({
     return { $ref: `#/components/schemas/${name}` }
   }
 
-  const buildParameters = (schema: Record<string, any>): Record<string, unknown>[] =>
+  const buildParameters = (schema: Record<string, any>) =>
     Object.entries(PARAMETER_TARGETS).flatMap(([target, openApiIn]) => {
       const targetSchema = schema[target]
       if (!targetSchema) return []
@@ -65,7 +63,7 @@ export function buildDocument({
   const buildRequestBody = (
     routeSchema: Record<string, any> | undefined,
     operationMeta?: OperationMeta,
-  ): Record<string, unknown> | undefined => {
+  ) => {
     if (!routeSchema) return
 
     let contentType: string
@@ -87,7 +85,7 @@ export function buildDocument({
     }
   }
 
-  const buildResponses = (operationMeta: OperationMeta | undefined): Record<string, unknown> => {
+  const buildResponses = (operationMeta: OperationMeta | undefined) => {
     if (!operationMeta?.responses || !Object.keys(operationMeta.responses).length)
       return { 200: { description: 'Successful response' } }
 
@@ -110,7 +108,7 @@ export function buildDocument({
     route: { method: string; path: string; schema?: Record<string, any> },
     operationMeta: OperationMeta | undefined,
     controllerMeta: { tag?: TagMeta; security?: Record<string, string[]>[] } | undefined,
-  ): Record<string, unknown> => {
+  ) => {
     const tagList = operationMeta?.tags ?? (controllerMeta?.tag ? [controllerMeta.tag.name] : [])
     const schema = operationMeta?.schema ?? route.schema
     const parameters = schema ? buildParameters(schema) : []
@@ -128,7 +126,7 @@ export function buildDocument({
     })
   }
 
-  const buildPaths = (): Record<string, Record<string, unknown>> => {
+  const buildPaths = () => {
     const paths: Record<string, Record<string, unknown>> = {}
 
     for (const controller of controllers) {
@@ -149,18 +147,17 @@ export function buildDocument({
   }
 
   const collectTags = (): TagMeta[] =>
-    controllers.flatMap((controller: Class<any>) => {
+    controllers.flatMap((controller) => {
       const metadata = asControllerMetadata(controller[Symbol.metadata])
       const tag = metadata?.openapi?.tag
       return tag ? [tag] : []
     })
 
-  const buildComponents = (): Record<string, unknown> | undefined => {
-    return compactObject({
+  const buildComponents = () =>
+    compactObject({
       schemas: !!componentSchemas.size && Object.fromEntries(componentSchemas),
       securitySchemes: options.securitySchemes,
     })
-  }
 
   return compactObject({
     openapi: '3.1.0',
