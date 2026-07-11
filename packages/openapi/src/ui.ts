@@ -2,18 +2,13 @@ import type { Context } from 'hono'
 
 import { html } from 'hono/html'
 
-export interface ScalarOptions {
-  /** Path or URL to the OpenAPI JSON document */
+export function ui(options: {
   path: string
-  /** Page title */
+  openapiPath: string
   title?: string
-  /** CDN URL for Scalar */
   cdn?: string
-  /** Scalar theme: 'default' | 'alternate' | 'moon' | 'purple' | 'solarized' | 'bluePlanet' | 'saturn' | 'kepler' | 'mars' | 'deepSpace' | 'none' */
   theme?: string
-}
-
-export function scalarUi(options: ScalarOptions) {
+}) {
   const title = options.title ?? 'API Reference'
   const cdn = options.cdn ?? 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
   const theme = options.theme ?? 'default'
@@ -30,7 +25,7 @@ export function scalarUi(options: ScalarOptions) {
           <body>
             <script
               id="api-reference"
-              data-url="${options.path}"
+              data-url="${options.openapiPath}"
               data-configuration="${JSON.stringify({ theme })}"
             ></script>
             <script src="${cdn}"></script>
