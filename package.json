@@ -1,8 +1,7 @@
 {
   "name": "enshou",
-  "private": true,
   "license": "ISC",
-  "author": "Ivan Popov <iiivanpopov999@gmail.com>",
+  "author": "Ivan Popov <iivanpopov@proton.me>",
   "type": "module",
   "scripts": {
     "build": "pnpm run -r build",
