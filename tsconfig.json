@@ -4,7 +4,6 @@
     { "path": "./shared" },
     { "path": "./packages/core" },
     { "path": "./packages/cron" },
-    { "path": "./packages/di" },
     { "path": "./packages/openapi" },
     { "path": "./packages/valibot" },
     { "path": "./packages/zod" }

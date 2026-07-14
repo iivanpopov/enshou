@@ -1,6 +1,6 @@
 {
   "name": "@enshou/valibot",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "private": false,
   "license": "ISC",
   "author": "Ivan Popov <iivanpopov@proton.me>",
@@ -24,7 +24,6 @@
   "devDependencies": {
     "@enshou/core": "workspace:*",
     "@types/bun": "catalog:",
-    "@valibot/to-json-schema": "^1.7.1",
     "hono": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",

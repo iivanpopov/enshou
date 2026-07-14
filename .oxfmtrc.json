@@ -1,7 +1,13 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "singleQuote": true,
   "semi": false,
+  "singleQuote": true,
+  "printWidth": 100,
+  "arrowParens": "always",
+  "trailingComma": "all",
+  "useTabs": false,
+  "tabWidth": 2,
+  "quoteProps": "consistent",
   "sortImports": {
     "groups": [
       ["type-builtin", "type-external"],

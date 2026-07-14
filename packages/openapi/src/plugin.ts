@@ -2,7 +2,6 @@ import type { Plugin } from '@enshou/core'
 
 import type { OpenApiInfo, OpenApiServer, SecurityScheme, SchemaResolver } from './types'
 
-import { buildDocument } from './builder'
 import { ui } from './ui'
 
 export interface OpenapiOptions {
@@ -31,10 +30,10 @@ export function OpenApiPlugin({ openapi, scalar }: OpenApiPluginOptions): Plugin
     onApplicationInit: ({ hono, options: { controllers } }) => {
       if (!openapi || !controllers.length) return
 
-      const document = buildDocument({ ...openapi, controllers })
+      // const document = buildDocument({ ...openapi, controllers })
 
       const openapiPath = openapi.path ?? '/openapi.json'
-      hono.get(openapiPath, (c) => c.json(document))
+      hono.get(openapiPath, (c) => c.json(''))
 
       if (scalar?.path) hono.get(scalar.path, ui({ ...scalar, openapiPath }))
     },

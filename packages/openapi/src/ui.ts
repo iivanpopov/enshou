@@ -13,8 +13,8 @@ export function ui(options: {
   const cdn = options.cdn ?? 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
   const theme = options.theme ?? 'default'
 
-  return (c: Context): Response | Promise<Response> => {
-    return c.html(
+  return (c: Context): Response | Promise<Response> =>
+    c.html(
       html`<!doctype html>
         <html>
           <head>
@@ -32,5 +32,4 @@ export function ui(options: {
           </body>
         </html>`,
     )
-  }
 }

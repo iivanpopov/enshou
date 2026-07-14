@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 
 const commitMsgPath = process.argv[2]
 if (!commitMsgPath) process.exit(0)

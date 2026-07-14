@@ -2,11 +2,11 @@ import type { Hono } from 'hono'
 
 import type { ResolvedApplicationOptions } from './application'
 
-export interface ApplicationInitContext {
+export interface OnInitContext {
   hono: Hono
   options: ResolvedApplicationOptions
 }
 
-export interface OnApplicationInit {
-  onApplicationInit(ctx: ApplicationInitContext): Promise<void> | void
+export interface OnInit {
+  onInit(ctx: OnInitContext): Promise<void> | void
 }

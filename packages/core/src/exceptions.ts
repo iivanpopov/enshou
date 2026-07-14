@@ -35,3 +35,9 @@ export class RestException extends HTTPException {
     })
   }
 }
+
+export class ValidationException extends RestException {
+  constructor(issues: { path: string[]; message: string }[]) {
+    super(422, { payload: { message: 'Validation failed.', issues } })
+  }
+}

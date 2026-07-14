@@ -23,13 +23,11 @@
   },
   "devDependencies": {
     "@enshou/core": "workspace:*",
-    "@enshou/di": "workspace:*",
     "@types/bun": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@enshou/core": "workspace:*",
-    "@enshou/di": "workspace:*"
+    "@enshou/core": "workspace:*"
   }
 }

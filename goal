@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info:
+  title: Users API
+  version: 1.0.0
+
+paths:
+  /users:
+    post:
+      operationId: createUser
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateUserResponse'
+
+components:
+  schemas:
+    Location:
+      type: string
+
+    Email:
+      type: string
+      format: email
+
+    UserSchema:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          $ref: '#/components/schemas/Email'
+        name:
+          type: string
+      required:
+        - id
+        - email
+        - name
+
+  headers:
+    Location:
+      schema:
+        $ref: '#/components/schemas/Location'
+
+  responses:
+    CreateUserResponse:
+      headers:
+        location:
+          $ref: '#/components/headers/Location'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserSchema'

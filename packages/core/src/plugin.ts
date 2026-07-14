@@ -1,5 +1,14 @@
-import type { OnApplicationInit } from './lifecycle'
+import type { Hono } from 'hono'
 
-export interface Plugin extends OnApplicationInit {}
+import type { ResolvedApplicationOptions } from './application'
+import type { Container } from './container'
 
-export type PluginDefinition = Plugin
+export interface PluginContext {
+  container: Container
+  hono: Hono
+  options: ResolvedApplicationOptions
+}
+
+export interface Plugin {
+  init(context: PluginContext): Promise<void> | void
+}

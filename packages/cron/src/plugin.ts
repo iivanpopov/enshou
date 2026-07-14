@@ -1,24 +1,22 @@
-import type { Plugin } from '@enshou/core'
-
-import { token } from '@enshou/di'
+import type { Plugin, Token } from '@enshou/core'
 
 import type { Class } from '#shared/types'
 
 import { asCronMetadata } from './metadata'
 
 export interface CronPluginOptions {
-  jobs: Class<any>[]
+  jobs: Class[]
 }
 
 export function CronPlugin({ jobs }: CronPluginOptions): Plugin {
   return {
-    onApplicationInit: async ({ options: { container } }) => {
+    init: async ({ container }) => {
       for (const job of jobs) {
-        const jobToken = token(job.name)
-        container.registerClass(jobToken, job)
+        const provide = Symbol(job.name) as Token<any>
+        container.register({ provide, useClass: job })
+        const instance = await container.resolve<any>(provide)
 
-        const instance = await container.resolveAsync<any>(jobToken)
-        const metadata = asCronMetadata(instance[Symbol.metadata])
+        const metadata = asCronMetadata(job[Symbol.metadata])
 
         for (const [methodName, cronPattern] of metadata.jobs) {
           const handler = instance[methodName].bind(instance)

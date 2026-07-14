@@ -24,14 +24,15 @@
   "devDependencies": {
     "@enshou/core": "workspace:*",
     "@types/bun": "catalog:",
+    "@valibot/to-json-schema": "^1.7.1",
     "hono": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
+    "valibot": "catalog:",
     "zod": "catalog:"
   },
   "peerDependencies": {
     "@enshou/core": "workspace:*",
-    "@enshou/di": "workspace:*",
     "hono": "catalog:"
   }
 }

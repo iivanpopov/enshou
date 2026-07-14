@@ -1,9 +1,11 @@
 import '#shared/polyfill'
 
+export * from './container'
 export * from './application'
-export type { Ctx, GlobalEnv } from './context'
 export * from './decorators'
 export * from './exceptions'
+export type * from './module'
 export type * from './middleware'
 export type * from './lifecycle'
 export type * from './plugin'
+export type { Ctx, GlobalEnv } from './context'
