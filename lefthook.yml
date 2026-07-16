@@ -1,3 +1,11 @@
+output:
+  - meta
+  - summary
+  - success
+  - failure
+  - execution_out
+  - skips
+
 pre-commit:
   piped: true
   jobs:
@@ -14,9 +22,9 @@ pre-commit:
         parallel: true
         jobs:
           - name: build
-            run: pnpm --filter "./packages/*" build
+            run: pnpm -r --reporter=append-only build
           - name: test
-            run: pnpm --filter "./packages/*" test
+            run: pnpm test
 
 prepare-commit-msg:
   commands:
