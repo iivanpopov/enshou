@@ -56,7 +56,7 @@ describe('buildDocument', () => {
     const BadRequestResponse = defineResponse(
       'BadRequestResponse',
       v.object({
-        headers: v.object({
+        header: v.object({
           'X-Error-Trace': v.string(),
         }),
         json: BadRequestResponseBody,

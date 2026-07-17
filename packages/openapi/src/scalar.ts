@@ -3,13 +3,12 @@ import type { Context } from 'hono'
 import { html } from 'hono/html'
 
 export interface ScalarOptions {
-  url: string
   title?: string
   cdn?: string
   theme?: string
 }
 
-export function scalarUi(options: ScalarOptions) {
+export function scalarUi(url: string, options: ScalarOptions = {}) {
   const title = options.title ?? 'API Reference'
   const cdn = options.cdn ?? 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
   const theme = options.theme ?? 'default'
@@ -26,7 +25,7 @@ export function scalarUi(options: ScalarOptions) {
           <body>
             <script
               id="api-reference"
-              data-url="${options.url}"
+              data-url="${url}"
               data-configuration="${JSON.stringify({ theme })}"
             ></script>
             <script src="${cdn}"></script>

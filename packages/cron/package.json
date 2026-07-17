@@ -1,6 +1,6 @@
 {
   "name": "@enshou/cron",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": false,
   "license": "ISC",
   "author": "Ivan Popov <iivanpopov@proton.me>",

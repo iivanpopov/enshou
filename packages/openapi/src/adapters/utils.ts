@@ -1,7 +1,7 @@
 export function parseResponseSchema(jsonSchema: any): Record<string, any> {
   const properties = jsonSchema?.properties ?? {}
 
-  if (!('json' in properties) && !('headers' in properties) && !('cookies' in properties)) {
+  if (!('json' in properties) && !('header' in properties) && !('cookie' in properties)) {
     return {
       content: {
         'application/json': { schema: jsonSchema },
@@ -17,15 +17,15 @@ export function parseResponseSchema(jsonSchema: any): Record<string, any> {
     }
   }
 
-  if ('headers' in properties) {
+  if ('header' in properties) {
     response.headers = {}
   }
 
-  for (const [headerName, headerSchema] of Object.entries(properties.headers?.properties ?? {})) {
+  for (const [headerName, headerSchema] of Object.entries(properties.header?.properties ?? {})) {
     response.headers[headerName] = { schema: headerSchema }
   }
 
-  if (properties.cookies) {
+  if (properties.cookie) {
     response.headers ??= {}
     response.headers[`Set-Cookie`] = {
       schema: { type: 'string' },

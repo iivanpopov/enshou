@@ -1,4 +1,5 @@
 import type { Module } from '@enshou/core'
+import type { ValidationTargets } from 'hono'
 
 import { asControllerMetadata } from '@enshou/core'
 
@@ -71,10 +72,10 @@ interface OpenApiOperation {
 
 const PARAM_LOCATIONS = [
   { in: 'query', key: 'query' },
-  { in: 'path', key: 'params' },
-  { in: 'header', key: 'headers' },
-  { in: 'cookie', key: 'cookies' },
-] as const
+  { in: 'path', key: 'param' },
+  { in: 'header', key: 'header' },
+  { in: 'cookie', key: 'cookie' },
+] as const satisfies { in: string; key: keyof ValidationTargets }[]
 
 function buildParameters(jsonSchema: JsonSchema): OpenApiParameter[] {
   const properties = jsonSchema.properties ?? {}

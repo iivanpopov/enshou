@@ -2,6 +2,7 @@ import type { Plugin, PluginInitContext } from '@enshou/core'
 
 import type { OpenApiAdapter, OpenApiOptions } from './build-document'
 import type { ComponentsRegistry } from './components'
+import type { ScalarOptions } from './scalar'
 
 import { buildDocument } from './build-document'
 import { scalarUi } from './scalar'
@@ -11,9 +12,7 @@ export interface OpenApiPluginOptions {
   openapi: OpenApiOptions & {
     path: string
   }
-  scalar?: {
-    path: string
-  }
+  scalar?: ScalarOptions & { path: string }
   registry?: ComponentsRegistry
 }
 
@@ -31,7 +30,8 @@ export function OpenApiPlugin({
         return c.json(document)
       })
       if (scalar) {
-        hono.get(scalar.path, scalarUi({ ...scalar, url: openapi.path }))
+        const { path, ...rest } = scalar
+        hono.get(path, scalarUi(openapi.path, rest))
       }
     },
   }
